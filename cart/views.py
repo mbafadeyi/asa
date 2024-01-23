@@ -1,8 +1,8 @@
-from django.shortcuts import get_object_or_404, reverse
+from django.shortcuts import get_object_or_404, redirect, reverse
 from django.views import generic
 
 from .forms import AddToCartForm
-from .models import Product
+from .models import OrderItem, Product
 from .utils import get_or_set_order_session
 
 
@@ -19,7 +19,7 @@ class ProductDetailView(generic.FormView):
         return get_object_or_404(Product, slug=self.kwargs["slug"])
 
     def get_success_url(self):
-        return reverse("home")  # TODO: cart
+        return reverse("cart:summary")
 
     def get_form_kwargs(self):
         kwargs = super(ProductDetailView, self).get_form_kwargs()
@@ -62,3 +62,29 @@ class CartView(generic.TemplateView):
         context = super(CartView, self).get_context_data(**kwargs)
         context["order"] = get_or_set_order_session(self.request)
         return context
+
+
+class IncreaseQuantityView(generic.View):
+    def get(self, request, *args, **kwargs):
+        order_item = get_object_or_404(OrderItem, id=kwargs["pk"])
+        order_item.quantity += 1
+        order_item.save()
+        return redirect("cart:summary")
+
+
+class DecreaseQuantityView(generic.View):
+    def get(self, request, *args, **kwargs):
+        order_item = get_object_or_404(OrderItem, id=kwargs["pk"])
+        if order_item.quantity <= 1:
+            order_item.delete()
+        else:
+            order_item.quantity -= 1
+            order_item.save()
+        return redirect("cart:summary")
+
+
+class RemoveFromCartView(generic.View):
+    def get(self, request, *args, **kwargs):
+        order_item = get_object_or_404(OrderItem, id=kwargs["pk"])
+        order_item.delete()
+        return redirect("cart:summary")
