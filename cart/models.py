@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.shortcuts import reverse
 from django.template.defaultfilters import slugify
 
 User = get_user_model()
@@ -48,8 +49,8 @@ class Product(models.Model):
         to_assign = to_assign + str(Product.objects.all().count())
         super().save(*args, **kwargs)
 
-    # def get_absolute_url(self):
-    #     return reverse("_detail", kwargs={"pk": self.pk})
+    def get_absolute_url(self):
+        return reverse("cart:product-detail", kwargs={"slug": self.slug})
 
 
 class OrderItem(models.Model):
