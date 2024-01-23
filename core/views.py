@@ -28,7 +28,7 @@ class ContactView(generic.FormView):
 
         full_message = f"""
             Received message below from {name}, {email}
-            ____________________________________
+            _______________________________________________________________
 
 
 
