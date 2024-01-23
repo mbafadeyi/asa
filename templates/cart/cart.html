@@ -45,7 +45,7 @@
                                     <small>Colour: {{ item.colour.name }}</small>
                                 </td>
                                 <td>
-                                    $0
+                                    ${{ item.product.get_price }}
                                 </td>
                                 <td>
                                     <div class="input-group mb-3" style="max-width: 120px;">
@@ -63,7 +63,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    $0
+                                    ${{ item.get_total_item_price }}
                                 </td>
                                 <td>
                                     <a href="#" class="btn btn-primary btn-sm">X</a>
