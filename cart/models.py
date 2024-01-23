@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.template.defaultfilters import slugify
 
 User = get_user_model()
 
@@ -26,18 +27,26 @@ class Address(models.Model):
 
 class Product(models.Model):
     title = models.CharField(max_length=150)
-    slug = models.SlugField()
+    slug = models.SlugField(unique=True, blank=True, null=True)
+    image = models.ImageField(upload_to="product_images")
     description = models.TextField()
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     active = models.BooleanField(default=False)
 
-    # class Meta:
-    #     verbose_name = _("")
-    #     verbose_name_plural = _("s")
+    class Meta:
+        ordering = ("-created",)
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        to_assign = slugify(self.title)
+
+        if Product.objects.filter(slug=to_assign).count() < 2:
+            self.slug = to_assign
+        to_assign = to_assign + str(Product.objects.all().count())
+        super().save(*args, **kwargs)
 
     # def get_absolute_url(self):
     #     return reverse("_detail", kwargs={"pk": self.pk})
@@ -83,7 +92,10 @@ class Order(models.Model):
 
 class Payment(models.Model):
     order = models.ForeignKey(Order, related_name="payments", on_delete=models.CASCADE)
-    payment_method = models.CharField(max_length=20, choices=(("PayPal", "PayPal"),))
+    payment_method = models.CharField(
+        max_length=20,
+        choices=(("PayPal", "PayPal"),),
+    )
     timestamp = models.DateTimeField(auto_now_add=True)
     successful = models.BooleanField(default=False)
     amount = models.FloatField()
