@@ -22,4 +22,5 @@ urlpatterns = [
         views.RemoveFromCartView.as_view(),
         name="remove-from-cart",
     ),
+    path("checkout/", views.CheckoutView.as_view(), name="checkout"),
 ]
