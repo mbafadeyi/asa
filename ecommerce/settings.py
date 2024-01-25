@@ -1,12 +1,12 @@
 import os
 from pathlib import Path
 
-# import environ
+import environ
 
-# env = environ.Env()
+env = environ.Env()
 
 # read the .env file
-# environ.Env.read_env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -16,12 +16,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = env("DJANGO_SECRET_KEY")
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+SECRET_KEY = env("DJANGO_SECRET_KEY")
+# SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = env("DJANGO_DEBUG")
-DEBUG = os.environ.get("DJANGO_DEBUG")
+DEBUG = env("DJANGO_DEBUG")
+# DEBUG = os.environ.get("DJANGO_DEBUG")
 
 ALLOWED_HOSTS = ["*"]
 
@@ -137,6 +137,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static_root")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+
+# PAYPAL
+PAYPAL_CLIENT_ID = os.environ.get("PAYPAL_SANDBOX_CLIENT_ID")
+PAYPAL_SECRET_KEY = os.environ.get("PAYPAL_SANDBOX_SECRET_KEY")
+
 if DEBUG is False:
     SESSION_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
@@ -160,6 +165,9 @@ if DEBUG is False:
             "PORT": "",
         }
     }
+
+    PAYPAL_CLIENT_ID = env("PAYPAL_LIVE_CLIENT_ID")
+    PAYPAL_SECRET_KEY = env("PAYPAL_LIVE_SECRET_KEY")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field

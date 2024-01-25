@@ -10,6 +10,13 @@ from .forms import ContactForm
 class HomeView(generic.TemplateView):
     template_name = "index.html"
 
+    # def get_context_data(self, **kwargs):
+    #     context = super(HomeView, self).get_context_data(**kwargs)
+    #     num_visits = self.request.session.get("num_visits", 0)
+    #     self.request.session["num_visits"] = num_visits + 1
+    #     context["num_visits"] = num_visits
+    #     return context
+
 
 class ContactView(generic.FormView):
     form_class = ContactForm
