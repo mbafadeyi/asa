@@ -72,6 +72,15 @@ class Product(models.Model):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse("cart:product-detail", kwargs={"slug": self.slug})
+
+    def get_delete_url(self):
+        return reverse("staff:product-delete", kwargs={"pk": self.pk})
+
+    def get_price(self):
+        return "{:.2f}".format(self.price / 100)
+
     def save(self, *args, **kwargs):
         to_assign = slugify(self.title)
 
@@ -79,12 +88,6 @@ class Product(models.Model):
             self.slug = to_assign
         to_assign = to_assign + str(Product.objects.all().count())
         super().save(*args, **kwargs)
-
-    def get_absolute_url(self):
-        return reverse("cart:product-detail", kwargs={"slug": self.slug})
-
-    def get_price(self):
-        return "{:.2f}".format(self.price / 100)
 
 
 class OrderItem(models.Model):
