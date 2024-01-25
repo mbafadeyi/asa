@@ -12,6 +12,7 @@ psycopg2 = "==2.9.9"
 sqlparse = "==0.4.4"
 crispy-bootstrap4 = "*"
 pillow = "*"
+django-allauth = "*"
 
 [dev-packages]
 

@@ -1,16 +1,30 @@
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.mail import send_mail
 from django.shortcuts import reverse
 from django.views import generic
 
+from cart.models import Order
+
 from .forms import ContactForm
+
+
+class ProfileView(LoginRequiredMixin, generic.TemplateView):
+    template_name = "profile.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(ProfileView, self).get_context_data(**kwargs)
+        context.update(
+            {"orders": Order.objects.filter(user=self.request.user, ordered=True)}
+        )
+        return context
 
 
 class HomeView(generic.TemplateView):
     template_name = "index.html"
 
-    # def get_context_data(self, **kwargs):
+    # def get_context_data(self, **kwargs): #page counts with session
     #     context = super(HomeView, self).get_context_data(**kwargs)
     #     num_visits = self.request.session.get("num_visits", 0)
     #     self.request.session["num_visits"] = num_visits + 1
