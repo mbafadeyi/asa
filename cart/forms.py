@@ -24,7 +24,7 @@ class AddToCartForm(forms.ModelForm):
         self.fields["size"].queryset = product.available_sizes.all()
 
     def clean(self):
-        product_id = self.product_id
+        product_id = self.product_id  # noqa
         product = Product.objects.get(id=self.product_id)
         quantity = self.cleaned_data["quantity"]
         print(quantity)

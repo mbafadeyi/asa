@@ -1,9 +1,12 @@
 import datetime
 import json
 
+import stripe
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, reverse
 from django.views import generic
@@ -11,7 +14,10 @@ from django.views import generic
 from .forms import AddressForm, AddToCartForm
 from .models import Address, Category, Order, OrderItem, Payment, Product
 from .utils import get_or_set_order_session
-from django.db.models import Q
+
+User = get_user_model()
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class ProductListView(generic.ListView):
@@ -179,6 +185,21 @@ class PaymentView(generic.TemplateView):
         return context
 
 
+class StripePaymentView(generic.TemplateView):
+    template_name = "cart/stripe_payment.html"
+
+    def get_context_data(self, **kwargs):
+        user = self.request.user
+        if not user.customer.stripe_customer_id:
+            stripe_customer = stripe.Customer.create(email=user.email)
+            user.customer_stripe_customer_id = stripe_customer["id"]
+            user.customer.save()
+
+        context = super(StripePaymentView, self).get_context_data(**kwargs)
+        context["STRIPE_PUBLIC_KEY"] = settings.STRIPE_PUBLIC_KEY
+        return context
+
+
 class ConfirmOrderView(generic.View):
     def post(self, request, *args, **kwargs):
         order = get_or_set_order_session(request)
@@ -204,14 +225,3 @@ class OrderDetailView(LoginRequiredMixin, generic.DetailView):
     template_name = "cart/order.html"
     queryset = Order.objects.all()
     context_object_name = "order"
-
-
-# class CategoryListView(generic.ListView):
-#     template_name = "category_list.html"
-#     queryset = Category.objects.filter(product__title="slug")
-
-
-# class CategoryDetailView(generic.DetailView):
-#     template_name = "category_detail.html"
-#     queryset = Category.objects.all()
-#     context_object_name = "category"
