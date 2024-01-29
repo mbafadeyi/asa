@@ -27,4 +27,8 @@ urlpatterns = [
     path("thank-you/", views.ThankYouView.as_view(), name="thank-you"),
     path("confirm-order/", views.ConfirmOrderView.as_view(), name="confirm-order"),
     path("orders/<pk>/", views.OrderDetailView.as_view(), name="order-detail"),
+    # path("category/", views.CategoryListView.as_view(), name="category-list"),
+    # path(
+    #     "category/<slug>/", views.CategoryDetailView.as_view(), name="category-detail"
+    # ),
 ]

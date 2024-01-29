@@ -9,13 +9,28 @@ from django.shortcuts import get_object_or_404, redirect, reverse
 from django.views import generic
 
 from .forms import AddressForm, AddToCartForm
-from .models import Address, Order, OrderItem, Payment, Product
+from .models import Address, Category, Order, OrderItem, Payment, Product
 from .utils import get_or_set_order_session
+from django.db.models import Q
 
 
 class ProductListView(generic.ListView):
     template_name = "cart/product_list.html"
-    queryset = Product.objects.all()
+
+    def get_queryset(self):
+        qs = Product.objects.all()
+        category = self.request.GET.get("category", None)
+        if category:
+            qs = qs.filter(
+                Q(primary_category__name=category)
+                | Q(secondary_category__name=category)
+            ).distinct()
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super(ProductListView, self).get_context_data(**kwargs)
+        context.update({"categories": Category.objects.values("name")})
+        return context
 
 
 class ProductDetailView(generic.FormView):
@@ -168,7 +183,7 @@ class ConfirmOrderView(generic.View):
     def post(self, request, *args, **kwargs):
         order = get_or_set_order_session(request)
         body = json.loads(request.body)
-        payment = Payment.objects.create(
+        payment = Payment.objects.create(  # noqa
             order=order,
             successful=True,
             raw_response=json.dumps(body),
@@ -189,3 +204,14 @@ class OrderDetailView(LoginRequiredMixin, generic.DetailView):
     template_name = "cart/order.html"
     queryset = Order.objects.all()
     context_object_name = "order"
+
+
+# class CategoryListView(generic.ListView):
+#     template_name = "category_list.html"
+#     queryset = Category.objects.filter(product__title="slug")
+
+
+# class CategoryDetailView(generic.DetailView):
+#     template_name = "category_detail.html"
+#     queryset = Category.objects.all()
+#     context_object_name = "category"
