@@ -56,34 +56,17 @@ class SizeVariation(models.Model):
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    # slug = models.SlugField(unique=True, blank=True, null=True)
 
     class Meta:
-        verbose_name = "Category"
         verbose_name_plural = "Categories"
 
     def __str__(self):
         return self.name
 
-    def get_absolute_url(self):
-        return reverse("category-detail", kwargs={"slug": self.slug})
-
-    # def save(self, *args, **kwargs):
-    #     to_assign = slugify(self.name)
-
-    #     if Category.objects.filter(slug=to_assign).count() < 2:
-    #         self.slug = to_assign
-    #     to_assign = to_assign + str(Category.objects.all().count())
-    #     super().save(*args, **kwargs)
-
 
 class Product(models.Model):
     title = models.CharField(max_length=150)
     slug = models.SlugField(unique=True, blank=True, null=True)
-    primary_category = models.ForeignKey(
-        Category, related_name="primary_products", on_delete=models.CASCADE
-    )
-    secondary_category = models.ManyToManyField(Category, blank=True)
     image = models.ImageField(upload_to="product_images")
     description = models.TextField()
     price = models.PositiveIntegerField(default=0)
@@ -92,6 +75,11 @@ class Product(models.Model):
     active = models.BooleanField(default=False)
     available_colours = models.ManyToManyField(ColourVariation)
     available_sizes = models.ManyToManyField(SizeVariation)
+    primary_category = models.ForeignKey(
+        Category, related_name="primary_products", on_delete=models.CASCADE
+    )
+    secondary_category = models.ManyToManyField(Category, blank=True)
+    stock = models.PositiveIntegerField(default=0)
 
     class Meta:
         ordering = ("-created",)
@@ -118,6 +106,10 @@ class Product(models.Model):
             self.slug = to_assign
         to_assign = to_assign + str(Product.objects.all().count())
         super().save(*args, **kwargs)
+
+    @property
+    def in_stock(self):
+        return self.stock > 0
 
 
 class OrderItem(models.Model):
