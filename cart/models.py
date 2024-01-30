@@ -6,11 +6,22 @@ from django.template.defaultfilters import slugify
 User = get_user_model()
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
+
 class Address(models.Model):
     ADDRESS_CHOICES = (
         ("B", "Billing"),
         ("S", "Shipping"),
     )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     address_line_1 = models.CharField(max_length=150)
     address_line_2 = models.CharField(max_length=150)
@@ -29,36 +40,12 @@ class Address(models.Model):
 class ColourVariation(models.Model):
     name = models.CharField(max_length=50)
 
-    # class Meta:
-    #     verbose_name = ""
-    #     verbose_name_plural = ""
-
     def __str__(self):
         return self.name
-
-    # def get_absolute_url(self):
-    #     return reverse("_detail", kwargs={"pk": self.pk})
 
 
 class SizeVariation(models.Model):
     name = models.CharField(max_length=50)
-
-    # class Meta:
-    #     verbose_name = ""
-    #     verbose_name_plural = ""
-
-    def __str__(self):
-        return self.name
-
-    # def get_absolute_url(self):
-    #     return reverse("_detail", kwargs={"pk": self.pk})
-
-
-class Category(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-
-    class Meta:
-        verbose_name_plural = "Categories"
 
     def __str__(self):
         return self.name
@@ -69,7 +56,7 @@ class Product(models.Model):
     slug = models.SlugField(unique=True, blank=True, null=True)
     image = models.ImageField(upload_to="product_images")
     description = models.TextField()
-    price = models.PositiveIntegerField(default=0)
+    price = models.IntegerField(default=0)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     active = models.BooleanField(default=False)
@@ -78,11 +65,8 @@ class Product(models.Model):
     primary_category = models.ForeignKey(
         Category, related_name="primary_products", on_delete=models.CASCADE
     )
-    secondary_category = models.ManyToManyField(Category, blank=True)
-    stock = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        ordering = ("-created",)
+    secondary_categories = models.ManyToManyField(Category, blank=True)
+    stock = models.IntegerField(default=0)
 
     def __str__(self):
         return self.title
@@ -114,7 +98,7 @@ class Product(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey("Order", related_name="items", on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.ForeignKey)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     colour = models.ForeignKey(ColourVariation, on_delete=models.CASCADE)
     size = models.ForeignKey(SizeVariation, on_delete=models.CASCADE)
@@ -175,16 +159,13 @@ class Order(models.Model):
         return subtotal
 
     def get_total(self):
-        subtotal = self.get_raw_subtotal()
-        return "{:.2f}".format(subtotal / 100)
+        total = self.get_raw_total()
+        return "{:.2f}".format(total / 100)
 
 
 class Payment(models.Model):
-    order = models.ForeignKey(Order, related_name="payments", on_delete=models.CASCADE)
-    payment_method = models.CharField(
-        max_length=20,
-        choices=(("PayPal", "PayPal"),),
-    )
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="payments")
+    payment_method = models.CharField(max_length=20, choices=(("PayPal", "PayPal"),))
     timestamp = models.DateTimeField(auto_now_add=True)
     successful = models.BooleanField(default=False)
     amount = models.FloatField()
@@ -197,8 +178,19 @@ class Payment(models.Model):
     def reference_number(self):
         return f"PAYMENT-{self.order}-{self.pk}"
 
-    class Meta:
-        verbose_name_plural = "Payments"
 
-    # def get_absolute_url(self):
-    #     return reverse("_detail", kwargs={"pk": self.pk})
+class StripePayment(models.Model):
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name="stripe_payments"
+    )
+    payment_intent_id = models.CharField(max_length=100)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    successful = models.BooleanField(default=False)
+    amount = models.FloatField(default=0)
+
+    def __str__(self):
+        return self.reference_number
+
+    @property
+    def reference_number(self):
+        return f"STRIPE-PAYMENT-{self.order}-{self.pk}"
